@@ -1,10 +1,7 @@
 package at.htlle.auk.shuffler.controller;
 
 import at.htlle.auk.shuffler.model.Topic;
-import javafx.animation.PauseTransition;
-import javafx.animation.RotateTransition;
-import javafx.animation.SequentialTransition;
-import javafx.animation.TranslateTransition;
+import javafx.animation.*;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -124,6 +121,7 @@ public class ShuffleController {
     }
 
     private void loadTopics() {
+        // Reset state
         cards.clear();
         selected.clear();
         isShuffled = false;
@@ -152,24 +150,32 @@ public class ShuffleController {
         isShuffled = true;
 
         Collections.shuffle(cards);
+
+        // Play flip-to-back + movement animations
         for (int i = 0; i < cards.size(); i++) {
             final int index = i;
             StackPane card = cards.get(index);
-            // Zwei-Phasen-Flip: vornirgendphase verstecken, dann rückseite zeigen
+
+            // 2-phase flip: 0 -> 90   then 90 -> 180 (on the second phase we switch visible side)
             RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
             flip1.setAxis(Rotate.Y_AXIS);
             flip1.setFromAngle(0);
             flip1.setToAngle(90);
             flip1.setDelay(Duration.millis(index * 100));
+
             RotateTransition flip2 = new RotateTransition(Duration.millis(200), card);
             flip2.setAxis(Rotate.Y_AXIS);
             flip2.setFromAngle(90);
             flip2.setToAngle(180);
+            // after half-rotation show back
             flip2.setOnFinished(e -> CardFactory.showBack(card));
+
             SequentialTransition seq = new SequentialTransition(flip1, flip2);
             seq.setOnFinished(e -> animateMove(card, index));
             seq.play();
         }
+
+        // After animations, reset translate/rotate and ensure proper layout
         PauseTransition pause = new PauseTransition(Duration.millis(400 + cards.size() * 100 + 300));
         pause.setOnFinished(e -> {
             cards.forEach(c -> { c.setTranslateX(0); c.setTranslateY(0); c.setRotate(0); });
@@ -179,6 +185,7 @@ public class ShuffleController {
     }
 
     private void animateMove(StackPane card, int index) {
+        // Attempt to compute movement delta; if size not ready yet, this will be no-op visually
         Point2D old = card.localToScene(0, 0);
         double cellX = grid.getLayoutX() + (index % 4) * (card.getWidth() + grid.getHgap());
         double cellY = grid.getLayoutY() + (index / 4) * (card.getHeight() + grid.getVgap());
@@ -192,12 +199,12 @@ public class ShuffleController {
         StackPane card = (StackPane) event.getSource();
         if (!isShuffled || selected.size() >= 2) return;
 
-        int idx = selected.size();
-        // Flip zur Vorderseite
+        // flip from back (180) to front (0) with two-phase rotation
         RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
         flip1.setAxis(Rotate.Y_AXIS);
         flip1.setFromAngle(180);
         flip1.setToAngle(90);
+
         RotateTransition flip2 = new RotateTransition(Duration.millis(200), card);
         flip2.setAxis(Rotate.Y_AXIS);
         flip2.setFromAngle(90);
@@ -216,22 +223,89 @@ public class ShuffleController {
     }
 
     private void revealAll() {
+        // Reveal all non-selected cards
         for (StackPane card : cards) {
             if (!selected.contains(card)) {
-                // Selbstähnlich Flip
                 RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
                 flip1.setAxis(Rotate.Y_AXIS);
                 flip1.setFromAngle(180);
                 flip1.setToAngle(90);
+
                 RotateTransition flip2 = new RotateTransition(Duration.millis(200), card);
                 flip2.setAxis(Rotate.Y_AXIS);
                 flip2.setFromAngle(90);
                 flip2.setToAngle(0);
                 flip2.setOnFinished(e -> CardFactory.showFront(card));
+
                 new SequentialTransition(flip1, flip2).play();
             }
         }
+
+        // allow user to finalize choice after reveal animations complete
+        PauseTransition allowChoose = new PauseTransition(Duration.millis(500));
+        allowChoose.setOnFinished(e -> enableFinalChoice());
+        allowChoose.play();
     }
+
+
+    /**
+     * Disable clicks on non-selected cards and set a final-choice handler on the two selected cards.
+     */
+    private void enableFinalChoice() {
+        for (StackPane card : cards) {
+            if (!selected.contains(card)) {
+                card.setOnMouseClicked(null); // deactivate non-selected
+            }
+        }
+        for (StackPane sCard : new ArrayList<>(selected)) {
+            final StackPane finalCard = sCard;
+            finalCard.setOnMouseClicked(ev -> finalizeChoice(finalCard));
+        }
+    }
+
+    private void finalizeChoice(StackPane chosen) {
+        // Mark the chosen card visually (green + animation)
+        if (!chosen.getStyleClass().contains("chosen")) {
+            chosen.getStyleClass().add("chosen");
+        }
+
+        ScaleTransition st = new ScaleTransition(Duration.millis(250), chosen);
+        st.setByX(0.08);
+        st.setByY(0.08);
+        st.setAutoReverse(true);
+        st.setCycleCount(2);
+        st.play();
+
+        // Deactivate clicks on all cards so user cannot change anything afterwards
+        for (StackPane c : cards) {
+            c.setOnMouseClicked(null);
+        }
+
+        // Dim (not-chosen) all cards that were never selected.
+        for (StackPane c : cards) {
+            if (!selected.contains(c)) {
+                if (!c.getStyleClass().contains("not-chosen")) {
+                    c.getStyleClass().add("not-chosen");
+                }
+            }
+        }
+
+        // Keep the other previously selected card as yellow (do NOT remove "selected").
+        // Optionally you can still remove selection on not-chosen cards, but we keep the two selected cards visible.
+        // If you want to remember the final decision for later, store it in a field:
+        // this.finalChoice = chosen;
+
+        // (optional) Print or callback
+        Object frontObj = chosen.getProperties().get("frontLabel");
+        if (frontObj instanceof Label) {
+            String chosenText = ((Label) frontObj).getText();
+            System.out.println("Final choice: " + chosenText);
+        }
+
+        // Do not clear `selected` here — keep the two selected cards marked.
+    }
+
+
 }
 
 class CardFactory {
@@ -263,10 +337,10 @@ class CardFactory {
 
         StackPane card = new StackPane(front, backView);
         card.getStyleClass().add("card");
-        // initial: only front sichtbar
+        // initial: only front visible
         front.setVisible(true);
         backView.setVisible(false);
-        // speichere References für showFront/back
+        // store references for later toggling
         card.getProperties().put("front", front);
         card.getProperties().put("back", backView);
         return card;

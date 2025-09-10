@@ -41,3 +41,21 @@
 .card.flipped .card-front {
     -fx-opacity: 0;
 }
+
+/* Final choice: green border + bold text */
+.card.chosen {
+    -fx-border-color: #28a745;        /* green border */
+    -fx-border-width: 4;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(40,167,69,0.45), 10, 0, 0, 4);
+}
+
+/* dim other, never-selected cards */
+.card.not-chosen {
+    -fx-opacity: 0.55;
+}
+
+/* Ensure chosen text bold (adjust selector if you used a custom label class) */
+.card.chosen .card-front .label {
+    -fx-font-weight: bold;
+}
