@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ComboBox?>
+
+<VBox xmlns="http://javafx.com/javafx/20"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="at.htlle.auk.shuffler.controller.ShuffleController"
+      spacing="10" alignment="CENTER">
+<children>
+    <ComboBox fx:id="subjectCombo" promptText="Fach wählen"/>
+    <Button text="Karten mischen" onAction="#onShuffle"/>
+    <GridPane fx:id="grid" hgap="10" vgap="10"/>
+</children>
+</VBox>

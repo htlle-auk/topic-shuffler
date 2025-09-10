@@ -1,0 +1,43 @@
+/* styles.css */
+
+/* Grundstil für alle Karten */
+.card {
+    -fx-pref-width: 240px;
+    -fx-pref-height: 160px;
+    -fx-alignment: center;
+    -fx-border-color: #ccc;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
+    -fx-cursor: hand;
+    /* Damit Vorder- und Rückseite exakt übereinander liegen */
+    -fx-padding: 0;
+}
+
+/* Styling der Vorderseite (Topic-Label) */
+.card-front {
+    -fx-background-color: white;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+/* Styling der Rückseite (ImageView-Carte-Back) */
+.card-back {
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+/* Markierung ausgewählter Karten */
+.card.selected {
+    -fx-border-color: gold;
+    -fx-border-width: 4;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.75), 8, 0, 0, 4);
+}
+
+/* Optional: weiterer Stil, nachdem Karte vollständig aufgedeckt ist */
+.card.flipped .card-front {
+    -fx-opacity: 0;
+}
