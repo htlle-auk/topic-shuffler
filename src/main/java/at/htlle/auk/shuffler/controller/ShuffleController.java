@@ -5,6 +5,7 @@ import javafx.animation.*;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -12,21 +13,43 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * Controller for the TopicShuffler UI.
+ *
+ * Behavior summary:
+ * - choose subject in ComboBox -> shows 8 topic cards (front = topic text)
+ * - "Shuffle" flips every card to its back (logo) and animates positions
+ * - click a card after shuffle -> flips it to front (reveals topic). User may reveal two cards.
+ * - after second reveal: all remaining cards are revealed; user must then click one of the two selected
+ *   to make the final choice (final card gets CSS class "chosen", other selected stays "selected").
+ *
+ * Notes:
+ * - This controller expects a card-back image at:
+ *   /at/htlle/auk/shuffler/images/card-back.png in resources.
+ * - It logs final selections using SLF4J (INFO level). Configure Logback/SLF4J in your project for file logging.
+ */
 public class ShuffleController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShuffleController.class);
+
     @FXML private GridPane grid;
     @FXML private ComboBox<String> subjectCombo;
 
     private Map<String, List<Topic>> subjectTopics;
-    private List<StackPane> cards = new ArrayList<>();
+    private final List<StackPane> cards = new ArrayList<>();
     private final List<StackPane> selected = new ArrayList<>();
     private boolean isShuffled = false;
+
 
     @FXML
     public void initialize() {
@@ -120,23 +143,30 @@ public class ShuffleController {
         loadTopics();
     }
 
+    /**
+     * Load topics for the currently selected subject and create cards.
+     */
     private void loadTopics() {
-        // Reset state
         cards.clear();
         selected.clear();
         isShuffled = false;
         grid.getChildren().clear();
 
-        String fach = subjectCombo.getValue();
-        List<Topic> topics = subjectTopics.get(fach);
+        String subject = subjectCombo.getValue();
+        List<Topic> topics = subjectTopics.getOrDefault(subject, Collections.emptyList());
+
         for (Topic t : topics) {
             StackPane card = CardFactory.createCard(t.getName());
             card.setOnMouseClicked(this::onCardClicked);
             cards.add(card);
         }
+
         layoutCards();
     }
 
+    /**
+     * Place card nodes into the grid (4 columns x 2 rows).
+     */
     private void layoutCards() {
         grid.getChildren().clear();
         for (int i = 0; i < cards.size(); i++) {
@@ -149,55 +179,89 @@ public class ShuffleController {
         if (isShuffled) return;
         isShuffled = true;
 
+        // 1) remember old scene positions
+        Map<StackPane, Point2D> oldPositions = new HashMap<>();
+        for (StackPane card : cards) {
+            Point2D old = card.localToScene(0, 0);
+            oldPositions.put(card, old);
+        }
+
+        // 2) shuffle the card list
         Collections.shuffle(cards);
 
-        // Play flip-to-back + movement animations
+        // 3) put the cards immediately into the grid in the new order
+        grid.getChildren().clear();
         for (int i = 0; i < cards.size(); i++) {
-            final int index = i;
-            StackPane card = cards.get(index);
+            grid.add(cards.get(i), i % 4, i / 4);
+        }
 
-            // 2-phase flip: 0 -> 90   then 90 -> 180 (on the second phase we switch visible side)
-            RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
+        // 4) force layout so nodes have correct new positions/sizes
+        grid.applyCss();
+        grid.layout();
+
+        // 5) compute new scene positions and set initial translate offsets (so they appear at old pos)
+        List<Animation> animations = new ArrayList<>();
+        for (StackPane card : cards) {
+            Point2D old = oldPositions.getOrDefault(card, card.localToScene(0, 0));
+            Point2D now = card.localToScene(0, 0);
+
+            // set offset so card visually stays at old position (but is actually in new grid cell)
+            double offsetX = old.getX() - now.getX();
+            double offsetY = old.getY() - now.getY();
+            card.setTranslateX(offsetX);
+            card.setTranslateY(offsetY);
+
+            // 6) flip to back (two-phase) and then animate translate to (0,0)
+            RotateTransition flip1 = new RotateTransition(Duration.millis(180), card);
             flip1.setAxis(Rotate.Y_AXIS);
             flip1.setFromAngle(0);
             flip1.setToAngle(90);
-            flip1.setDelay(Duration.millis(index * 100));
 
-            RotateTransition flip2 = new RotateTransition(Duration.millis(200), card);
+            RotateTransition flip2 = new RotateTransition(Duration.millis(180), card);
             flip2.setAxis(Rotate.Y_AXIS);
             flip2.setFromAngle(90);
             flip2.setToAngle(180);
-            // after half-rotation show back
             flip2.setOnFinished(e -> CardFactory.showBack(card));
 
-            SequentialTransition seq = new SequentialTransition(flip1, flip2);
-            seq.setOnFinished(e -> animateMove(card, index));
-            seq.play();
+            TranslateTransition move = new TranslateTransition(Duration.millis(350), card);
+            move.setToX(0);
+            move.setToY(0);
+            move.setInterpolator(Interpolator.EASE_BOTH);
+            // we want move to start after flip2
+            SequentialTransition seq = new SequentialTransition(new ParallelTransition(flip1, new PauseTransition(Duration.millis(0))), flip2, move);
+            seq.setDelay(Duration.millis(cards.indexOf(card) * 60)); // slight stagger
+            animations.add(seq);
         }
 
-        // After animations, reset translate/rotate and ensure proper layout
-        PauseTransition pause = new PauseTransition(Duration.millis(400 + cards.size() * 100 + 300));
-        pause.setOnFinished(e -> {
-            cards.forEach(c -> { c.setTranslateX(0); c.setTranslateY(0); c.setRotate(0); });
+        // 7) play all animations (they are independent). Using a ParallelTransition groups them.
+        ParallelTransition all = new ParallelTransition();
+        all.getChildren().addAll(animations);
+        all.setOnFinished(e -> {
+            // ensure final transforms reset
+            for (StackPane c : cards) {
+                c.setTranslateX(0);
+                c.setTranslateY(0);
+                c.setRotate(0);
+            }
+            // final layout to be safe
             layoutCards();
         });
-        pause.play();
+        all.play();
     }
 
-    private void animateMove(StackPane card, int index) {
-        // Attempt to compute movement delta; if size not ready yet, this will be no-op visually
-        Point2D old = card.localToScene(0, 0);
-        double cellX = grid.getLayoutX() + (index % 4) * (card.getWidth() + grid.getHgap());
-        double cellY = grid.getLayoutY() + (index / 4) * (card.getHeight() + grid.getVgap());
-        TranslateTransition tt = new TranslateTransition(Duration.millis(300), card);
-        tt.setByX(cellX - old.getX());
-        tt.setByY(cellY - old.getY());
-        tt.play();
-    }
-
+    /**
+     * Handle card click: reveal card (back -> front). Up to two reveals allowed.
+     * Prevent selecting the same card twice.
+     */
     private void onCardClicked(MouseEvent event) {
         StackPane card = (StackPane) event.getSource();
+        // ignore clicks before shuffle or when already two selections exist
         if (!isShuffled || selected.size() >= 2) return;
+
+        // Prevent the same card being selected twice
+        if (selected.contains(card)) {
+            return;
+        }
 
         // flip from back (180) to front (0) with two-phase rotation
         RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
@@ -211,21 +275,31 @@ public class ShuffleController {
         flip2.setToAngle(0);
         flip2.setOnFinished(e -> {
             CardFactory.showFront(card);
+            // add visual selection if not already present (defensive)
+            if (!card.getStyleClass().contains("selected")) {
+                card.getStyleClass().add("selected");
+            }
             selected.add(card);
-            card.getStyleClass().add("selected");
+
             if (selected.size() == 2) {
-                PauseTransition revealPause = new PauseTransition(Duration.millis(300));
-                revealPause.setOnFinished(ev -> revealAll());
+                // short delay then reveal & immediately dim/deactivate non-selected cards
+                PauseTransition revealPause = new PauseTransition(Duration.millis(250));
+                revealPause.setOnFinished(ev -> revealAndDimNonSelected());
                 revealPause.play();
             }
         });
+
         new SequentialTransition(flip1, flip2).play();
     }
 
-    private void revealAll() {
-        // Reveal all non-selected cards
+    /**
+     * Reveal all non-selected cards, immediately dim & deactivate them,
+     * then enable final choice on the two selected cards.
+     */
+    private void revealAndDimNonSelected() {
         for (StackPane card : cards) {
             if (!selected.contains(card)) {
+                // flip animation
                 RotateTransition flip1 = new RotateTransition(Duration.millis(200), card);
                 flip1.setAxis(Rotate.Y_AXIS);
                 flip1.setFromAngle(180);
@@ -235,26 +309,35 @@ public class ShuffleController {
                 flip2.setAxis(Rotate.Y_AXIS);
                 flip2.setFromAngle(90);
                 flip2.setToAngle(0);
-                flip2.setOnFinished(e -> CardFactory.showFront(card));
+
+                // when the front is shown, mark as not-chosen and deactivate clicks immediately
+                flip2.setOnFinished(e -> {
+                    CardFactory.showFront(card);
+                    if (!card.getStyleClass().contains("not-chosen")) {
+                        card.getStyleClass().add("not-chosen");
+                    }
+                    card.setOnMouseClicked(null);
+                });
 
                 new SequentialTransition(flip1, flip2).play();
             }
         }
 
-        // allow user to finalize choice after reveal animations complete
-        PauseTransition allowChoose = new PauseTransition(Duration.millis(500));
+        // After a short pause allow final choice on the two selected cards
+        PauseTransition allowChoose = new PauseTransition(Duration.millis(200));
         allowChoose.setOnFinished(e -> enableFinalChoice());
         allowChoose.play();
     }
 
 
     /**
-     * Disable clicks on non-selected cards and set a final-choice handler on the two selected cards.
+     * Make only the two selected cards clickable for the user's final choice.
+     * Other cards are deactivated.
      */
     private void enableFinalChoice() {
         for (StackPane card : cards) {
             if (!selected.contains(card)) {
-                card.setOnMouseClicked(null); // deactivate non-selected
+                card.setOnMouseClicked(null);
             }
         }
         for (StackPane sCard : new ArrayList<>(selected)) {
@@ -263,12 +346,28 @@ public class ShuffleController {
         }
     }
 
+    /**
+     * Finalize the user's choice:
+     * - mark the chosen card with 'chosen' CSS class (green)
+     * - keep the other previously selected card with 'selected' (yellow)
+     * - dim never-selected cards (add 'not-chosen')
+     * - log the selection (INFO)
+     * - deactivate further clicks
+     */
     private void finalizeChoice(StackPane chosen) {
-        // Mark the chosen card visually (green + animation)
+        // extract the two initially selected topic texts (robust)
+        String first = extractLabelText(selected.size() > 0 ? selected.get(0) : null);
+        String second = extractLabelText(selected.size() > 1 ? selected.get(1) : null);
+        String finalText = extractLabelText(chosen);
+        String subject = subjectCombo == null ? "<unknown>" : subjectCombo.getValue();
+
+        // log the selection BEFORE modifying UI state
+        LOGGER.info("Subject={} | selected=[{}, {}] | final={}", subject, first, second, finalText);
+
+        // visual marking
         if (!chosen.getStyleClass().contains("chosen")) {
             chosen.getStyleClass().add("chosen");
         }
-
         ScaleTransition st = new ScaleTransition(Duration.millis(250), chosen);
         st.setByX(0.08);
         st.setByY(0.08);
@@ -276,12 +375,12 @@ public class ShuffleController {
         st.setCycleCount(2);
         st.play();
 
-        // Deactivate clicks on all cards so user cannot change anything afterwards
+        // deactivate all cards to prevent further interaction
         for (StackPane c : cards) {
             c.setOnMouseClicked(null);
         }
 
-        // Dim (not-chosen) all cards that were never selected.
+        // dim never-selected cards
         for (StackPane c : cards) {
             if (!selected.contains(c)) {
                 if (!c.getStyleClass().contains("not-chosen")) {
@@ -290,73 +389,107 @@ public class ShuffleController {
             }
         }
 
-        // Keep the other previously selected card as yellow (do NOT remove "selected").
-        // Optionally you can still remove selection on not-chosen cards, but we keep the two selected cards visible.
-        // If you want to remember the final decision for later, store it in a field:
-        // this.finalChoice = chosen;
+        // keep the other selected card as yellow: do NOT remove "selected" class
+        // The chosen card already has "chosen" added; both will remain visible.
 
-        // (optional) Print or callback
-        Object frontObj = chosen.getProperties().get("frontLabel");
-        if (frontObj instanceof Label) {
-            String chosenText = ((Label) frontObj).getText();
-            System.out.println("Final choice: " + chosenText);
+        // Optionally: keep 'selected' list if you need it later; do not clear it here.
+    }
+
+    /**
+     * Robust extraction of the label text shown on a card.
+     * First checks the "frontLabel" property, then searches children for a Label.
+     */
+    private String extractLabelText(StackPane card) {
+        if (card == null) return "<unknown>";
+
+        Object o = card.getProperties().get("frontLabel");
+        if (o instanceof Label) {
+            String txt = ((Label) o).getText();
+            return txt == null || txt.isBlank() ? "<unknown>" : txt;
         }
 
-        // Do not clear `selected` here — keep the two selected cards marked.
-    }
-
-
-}
-
-class CardFactory {
-    private static final Image backImage;
-
-    static {
-        InputStream is = CardFactory.class.getResourceAsStream("/images/card_back.png");
-        if (is == null) {
-            throw new RuntimeException("card-back.png nicht gefunden im classpath unter /com/example/images/");
+        // fallback: search direct children and nested panes
+        for (Node child : card.getChildren()) {
+            if (child instanceof Label) {
+                String txt = ((Label) child).getText();
+                return txt == null || txt.isBlank() ? "<unknown>" : txt;
+            }
+            if (child instanceof Pane) {
+                for (Node inner : ((Pane) child).getChildren()) {
+                    if (inner instanceof Label) {
+                        String txt = ((Label) inner).getText();
+                        return txt == null || txt.isBlank() ? "<unknown>" : txt;
+                    }
+                }
+            }
         }
-        backImage = new Image(is);
+        return "<unknown>";
     }
 
-    static StackPane createCard(String text) {
-        Label frontLabel = new Label(text);
-        frontLabel.getStyleClass().add("card-front");
-        frontLabel.setWrapText(true);
-        frontLabel.setMaxWidth(220);
-        frontLabel.setAlignment(Pos.CENTER);
-        frontLabel.setTextAlignment(TextAlignment.CENTER);
-        StackPane front = new StackPane(frontLabel);
-        front.setPrefSize(240, 160);
+    /* ----------------------------------------------------------------------
+       CardFactory: helper to build cards with distinct front (text) and back (image).
+       The factory stores references in the Node properties for easy access.
+       ---------------------------------------------------------------------- */
+    private static class CardFactory {
+        private static final Image backImage;
 
-        ImageView backView = new ImageView(backImage);
-        backView.setFitWidth(240);
-        backView.setFitHeight(160);
-        backView.setPreserveRatio(true);
-        backView.getStyleClass().add("card-back");
+        static {
+            InputStream is = CardFactory.class.getResourceAsStream("/images/card_back.png");
+            if (is == null) {
+                throw new RuntimeException("card-back.png nicht gefunden im classpath unter /com/example/images/");
+            }
+            backImage = new Image(is);
+        }
 
-        StackPane card = new StackPane(front, backView);
-        card.getStyleClass().add("card");
-        // initial: only front visible
-        front.setVisible(true);
-        backView.setVisible(false);
-        // store references for later toggling
-        card.getProperties().put("front", front);
-        card.getProperties().put("back", backView);
-        return card;
-    }
+        static StackPane createCard(String text) {
+            // front label with wrapping and centered alignment
+            Label frontLabel = new Label(text);
+            frontLabel.getStyleClass().add("card-front");
+            frontLabel.setWrapText(true);
+            frontLabel.setMaxWidth(220); // adapt to your card width
+            frontLabel.setAlignment(Pos.CENTER);
+            frontLabel.setTextAlignment(TextAlignment.CENTER);
 
-    static void showBack(StackPane card) {
-        StackPane front = (StackPane) card.getProperties().get("front");
-        ImageView back = (ImageView) card.getProperties().get("back");
-        front.setVisible(false);
-        back.setVisible(true);
-    }
+            StackPane front = new StackPane(frontLabel);
+            front.setPrefSize(240, 160); // match your CSS/design
 
-    static void showFront(StackPane card) {
-        StackPane front = (StackPane) card.getProperties().get("front");
-        ImageView back = (ImageView) card.getProperties().get("back");
-        back.setVisible(false);
-        front.setVisible(true);
+            ImageView backView = new ImageView(backImage);
+            backView.setFitWidth(240);
+            backView.setFitHeight(160);
+            backView.setPreserveRatio(true);
+            backView.getStyleClass().add("card-back");
+
+            // order: front above back, visibility controlled by showFront/showBack
+            StackPane card = new StackPane(front, backView);
+            card.getStyleClass().add("card");
+
+            front.setVisible(true);
+            backView.setVisible(false);
+
+            // store references for later retrieval
+            card.getProperties().put("front", front);
+            card.getProperties().put("back", backView);
+            card.getProperties().put("frontLabel", frontLabel);
+
+            return card;
+        }
+
+        static void showBack(StackPane card) {
+            Object frontObj = card.getProperties().get("front");
+            Object backObj = card.getProperties().get("back");
+            if (frontObj instanceof StackPane && backObj instanceof ImageView) {
+                ((StackPane) frontObj).setVisible(false);
+                ((ImageView) backObj).setVisible(true);
+            }
+        }
+
+        static void showFront(StackPane card) {
+            Object frontObj = card.getProperties().get("front");
+            Object backObj = card.getProperties().get("back");
+            if (frontObj instanceof StackPane && backObj instanceof ImageView) {
+                ((ImageView) backObj).setVisible(false);
+                ((StackPane) frontObj).setVisible(true);
+            }
+        }
     }
 }

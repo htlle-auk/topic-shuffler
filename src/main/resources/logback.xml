@@ -1,0 +1,35 @@
+<configuration>
+
+    <!-- Console für Entwicklung -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling file: daily files in logs/yyyy-MM-dd.log -->
+    <appender name="DAILY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/current.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Pattern: logs/2025-09-10.log -->
+            <fileNamePattern>logs/%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days -->
+            <maxHistory>30</maxHistory>
+            <!-- optional: compress archived files: .gz -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] %-5level %msg%n</pattern>
+            <immediateFlush>true</immediateFlush>
+        </encoder>
+    </appender>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="DAILY" />
+    </root>
+
+</configuration>
