@@ -2,6 +2,7 @@ module at.htlle.auk.shuffler {
     requires javafx.controls;
     requires javafx.fxml;
     requires org.slf4j;
+    requires java.desktop;
 
 
     opens at.htlle.auk.shuffler to javafx.fxml;

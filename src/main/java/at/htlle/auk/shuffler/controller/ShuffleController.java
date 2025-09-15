@@ -2,18 +2,26 @@ package at.htlle.auk.shuffler.controller;
 
 import at.htlle.auk.shuffler.model.Topic;
 import javafx.animation.*;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
@@ -42,8 +50,19 @@ public class ShuffleController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShuffleController.class);
 
+    // debounce for resize events
+    private final PauseTransition fontResizeDebounce = new PauseTransition(Duration.millis(180));
+
+    // last applied font size (optional, for debugging)
+    private double lastAppliedFontSize = -1;
+
+    // guards scheduling so we don't attach multiple listeners
+    private boolean adjustScheduled = false;
+
+
     @FXML private GridPane grid;
     @FXML private ComboBox<String> subjectCombo;
+    @FXML private TextField nameField;
 
     private Map<String, List<Topic>> subjectTopics;
     private final List<StackPane> cards = new ArrayList<>();
@@ -141,6 +160,31 @@ public class ShuffleController {
         subjectCombo.setOnAction(e -> loadTopics());
         subjectCombo.getSelectionModel().selectFirst();
         loadTopics();
+
+        fontResizeDebounce.setOnFinished(e -> adjustLabelsFontSize());
+
+        if (grid.getScene() != null) {
+            grid.widthProperty().addListener((obs, o, n) -> fontResizeDebounce.playFromStart());
+            grid.heightProperty().addListener((obs, o, n) -> fontResizeDebounce.playFromStart());
+            Platform.runLater(() -> { grid.applyCss(); grid.layout(); adjustLabelsFontSize(); });
+        } else {
+            grid.sceneProperty().addListener((obs, oldS, newS) -> {
+                if (newS != null) {
+                    grid.widthProperty().addListener((o, ov, nv) -> fontResizeDebounce.playFromStart());
+                    grid.heightProperty().addListener((o, ov, nv) -> fontResizeDebounce.playFromStart());
+                    Platform.runLater(() -> { grid.applyCss(); grid.layout(); adjustLabelsFontSize(); });
+                }
+            });
+        }
+        grid.widthProperty().addListener((obs, oldV, newV) -> {
+            fontResizeDebounce.playFromStart();
+            scheduleAdjustLabelsFontSize();         // ensure adjustment is scheduled
+        });
+        grid.heightProperty().addListener((obs, oldV, newV) -> {
+            fontResizeDebounce.playFromStart();
+            scheduleAdjustLabelsFontSize();
+        });
+
     }
 
     /**
@@ -151,6 +195,11 @@ public class ShuffleController {
         selected.clear();
         isShuffled = false;
         grid.getChildren().clear();
+
+        // clear optional name on subject change
+        if (nameField != null) {
+            nameField.clear();
+        }
 
         String subject = subjectCombo.getValue();
         List<Topic> topics = subjectTopics.getOrDefault(subject, Collections.emptyList());
@@ -168,10 +217,32 @@ public class ShuffleController {
      * Place card nodes into the grid (4 columns x 2 rows).
      */
     private void layoutCards() {
+        // Clear grid and reset transforms on cards to avoid leftover translations/rotations
         grid.getChildren().clear();
+
         for (int i = 0; i < cards.size(); i++) {
-            grid.add(cards.get(i), i % 4, i / 4);
+            StackPane card = cards.get(i);
+
+            // Reset any old animation transforms/rotations from previous runs
+            card.setTranslateX(0);
+            card.setTranslateY(0);
+            card.setRotate(0);
+            card.setScaleX(1.0);
+            card.setScaleY(1.0);
+
+            grid.add(card, i % 4, i / 4);
         }
+
+        // Ensure responsive bindings are applied (safe to call repeatedly)
+        applyResponsiveBindings();
+
+        // after grid.add(...) etc. -> ensure layout pass and schedule font adjustment
+        grid.applyCss();
+        grid.layout();
+
+        // schedule a safe adjustment that waits for measured bounds
+        scheduleAdjustLabelsFontSize();
+
     }
 
     @FXML
@@ -355,14 +426,29 @@ public class ShuffleController {
      * - deactivate further clicks
      */
     private void finalizeChoice(StackPane chosen) {
+
         // extract the two initially selected topic texts (robust)
         String first = extractLabelText(selected.size() > 0 ? selected.get(0) : null);
         String second = extractLabelText(selected.size() > 1 ? selected.get(1) : null);
         String finalText = extractLabelText(chosen);
         String subject = subjectCombo == null ? "<unknown>" : subjectCombo.getValue();
 
-        // log the selection BEFORE modifying UI state
-        LOGGER.info("Subject={} | selected=[{}, {}] | final={}", subject, first, second, finalText);
+        // get optional user name (trimmed) — null if empty
+        String user = (nameField != null && !nameField.getText().isBlank())
+                ? nameField.getText().trim()
+                : null;
+
+        // build message, include user only if provided
+        String userPart = (user != null) ? " | user=" + user : "";
+        String message = String.format("Subject=%s%s | selected=[%s, %s] | final=%s",
+                subject,
+                userPart,
+                first == null ? "<unknown>" : first,
+                second == null ? "<unknown>" : second,
+                finalText == null ? "<unknown>" : finalText);
+
+        // log as INFO
+        LOGGER.info(message);
 
         // visual marking
         if (!chosen.getStyleClass().contains("chosen")) {
@@ -426,6 +512,278 @@ public class ShuffleController {
         return "<unknown>";
     }
 
+    /**
+     * Responsive bindings that are safe to call multiple times.
+     * - binds each card's prefWidth/prefHeight once (per card)
+     * - sizes are computed from the grid's width/height (avoids circular dependency)
+     */
+    private void applyResponsiveBindings() {
+        // If scene not ready yet, register once and retry later
+        if (grid.getScene() == null) {
+            grid.sceneProperty().addListener((obs, oldS, newS) -> {
+                if (newS != null) {
+                    Platform.runLater(this::applyResponsiveBindings);
+                }
+            });
+            return;
+        }
+
+        // If grid hasn't been measured yet, schedule a retry after layout pass
+        if (grid.getWidth() <= 0 || grid.getHeight() <= 0) {
+            Platform.runLater(() -> {
+                // second chance after layout
+                if (grid.getWidth() > 0 && grid.getHeight() > 0) {
+                    applyResponsiveBindings();
+                } else {
+                    // final fallback: bind with safe defaults
+                    bindWithDefaults();
+                }
+            });
+            return;
+        }
+
+        // compute bindings (based on current grid size)
+        final int columns = 4;
+        final int rows = 2;
+        double hgap = grid.getHgap();
+        double vgap = grid.getVgap();
+
+        DoubleBinding cardWidthBinding = Bindings.createDoubleBinding(() -> {
+            double totalW = grid.getWidth();
+            double totalGaps = (columns - 1) * hgap;
+            double usable = Math.max(0, totalW - totalGaps - 10);
+            double w = usable / columns;
+            return Math.max(120.0, Math.min(480.0, w)); // clamp
+        }, grid.widthProperty());
+
+        DoubleBinding cardHeightBinding = Bindings.createDoubleBinding(() -> {
+            double totalH = grid.getHeight();
+            double totalGaps = (rows - 1) * vgap;
+            double usable = Math.max(0, totalH - totalGaps - 10);
+            double h = usable / rows;
+            return Math.max(80.0, Math.min(360.0, h)); // clamp
+        }, grid.heightProperty());
+
+        // Apply bindings to any cards that haven't been bound yet
+        for (StackPane card : cards) {
+            Object applied = card.getProperties().get("responsiveApplied");
+            if (Boolean.TRUE.equals(applied)) continue;
+
+            // defensive min/max
+            card.setMinSize(80, 60);
+            card.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+            card.prefWidthProperty().bind(cardWidthBinding);
+            card.prefHeightProperty().bind(cardHeightBinding);
+
+            Object frontObj = card.getProperties().get("front");
+            Object backObj = card.getProperties().get("back");
+            Object labelObj = card.getProperties().get("frontLabel");
+
+            if (frontObj instanceof StackPane) {
+                StackPane front = (StackPane) frontObj;
+                front.prefWidthProperty().bind(card.widthProperty());
+                front.prefHeightProperty().bind(card.heightProperty());
+                front.setMinSize(javafx.scene.layout.Region.USE_COMPUTED_SIZE,
+                        javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            }
+            if (backObj instanceof javafx.scene.image.ImageView) {
+                javafx.scene.image.ImageView iv = (javafx.scene.image.ImageView) backObj;
+                iv.fitWidthProperty().bind(card.widthProperty());
+                iv.fitHeightProperty().bind(card.heightProperty());
+                iv.setPreserveRatio(true);
+            }
+            if (labelObj instanceof Label) {
+                Label lbl = (Label) labelObj;
+                lbl.setWrapText(true);
+                lbl.maxWidthProperty().bind(card.widthProperty().multiply(0.9));
+
+//                lbl.maxWidthProperty().bind(card.widthProperty().multiply(0.9));
+//                lbl.styleProperty().bind(Bindings.createStringBinding(
+//                        () -> String.format("-fx-font-size: %.0fpx;", Math.max(12.0, cardWidthBinding.get() * 0.12)),
+//                        cardWidthBinding
+//                ));
+            }
+
+            card.getProperties().put("responsiveApplied", Boolean.TRUE);
+        }
+
+        // Force an extra layout pass to stabilize sizes immediately
+        Platform.runLater(() -> {
+            grid.applyCss();
+            grid.layout();
+        });
+    }
+
+    // helper used as very conservative fallback if sizes can't be measured
+    private void bindWithDefaults() {
+        DoubleBinding defaultWidth = Bindings.createDoubleBinding(() -> 240.0);
+        DoubleBinding defaultHeight = Bindings.createDoubleBinding(() -> 160.0);
+        for (StackPane card : cards) {
+            if (Boolean.TRUE.equals(card.getProperties().get("responsiveApplied"))) continue;
+            card.prefWidthProperty().bind(defaultWidth);
+            card.prefHeightProperty().bind(defaultHeight);
+            card.getProperties().put("responsiveApplied", Boolean.TRUE);
+        }
+    }
+
+    /**
+     * Compute the largest font size that fits ALL topic labels into their cards,
+     * then apply that uniform font size to every label.
+     *
+     * This method measures the text using a Text node with wrapping to the label width
+     * and checks the resulting height against the available label height.
+     *
+     * It must be called after layout (cards have valid widths/heights).
+     */
+    private void adjustLabelsFontSize() {
+        // if no cards nothing to do
+        if (cards.isEmpty()) return;
+
+// if any card hasn't been measured yet, schedule a safe retry and return
+        for (StackPane card : cards) {
+            if (card.getWidth() <= 0 || card.getHeight() <= 0) {
+                scheduleAdjustLabelsFontSize();
+                return;
+            }
+        }
+
+
+        // compute per-card available width/height for the label (use the same margins you have elsewhere)
+        // choose conservative paddings: label area is 90% of card width, 70% of card height
+        double minAvailableWidth = Double.MAX_VALUE;
+        double minAvailableHeight = Double.MAX_VALUE;
+
+        List<Label> labels = new ArrayList<>();
+        for (StackPane card : cards) {
+            Object lblObj = card.getProperties().get("frontLabel");
+            if (lblObj instanceof Label) {
+                Label lbl = (Label) lblObj;
+                labels.add(lbl);
+
+                double availW = card.getWidth() * 0.90;   // 90% of card width
+                double availH = card.getHeight() * 0.70;  // 70% of card height (allow some top/bottom padding)
+                minAvailableWidth = Math.min(minAvailableWidth, availW);
+                minAvailableHeight = Math.min(minAvailableHeight, availH);
+            }
+        }
+        // defensive fallback if something went wrong with measurements
+        if (minAvailableWidth == Double.MAX_VALUE || minAvailableHeight == Double.MAX_VALUE) {
+            // use conservative defaults if measurement failed
+            minAvailableWidth = 200.0;
+            minAvailableHeight = 80.0;
+        }
+
+        if (labels.isEmpty()) return;
+
+        // determine the longest text among labels (we will check all labels though)
+        // do a binary search on font size between reasonable bounds
+        int lo = 8;     // minimal readable font
+        int hi = 120;   // upper bound (will be clamped by measurements)
+        int best = lo;
+
+        // Use the family of the first label (preserve style)
+        String family = labels.get(0).getFont() != null ? labels.get(0).getFont().getFamily() : Font.getDefault().getFamily();
+
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            if (allLabelsFitWithFont(labels, family, mid, minAvailableWidth, minAvailableHeight)) {
+                best = mid;      // mid fits -> try larger
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;    // mid too large -> try smaller
+            }
+        }
+
+        final double chosen = best;
+
+        // apply chosen font to all labels (use Platform.runLater to avoid interfering with layout)
+        Platform.runLater(() -> {
+            for (Label lbl : labels) {
+                lbl.setWrapText(true);
+                lbl.setFont(Font.font(family, chosen));
+                // only set inline style if styleProperty is NOT bound (defensive)
+                if (!lbl.styleProperty().isBound()) {
+                    lbl.setStyle(String.format("-fx-font-size: %.0fpx;", chosen));
+                }
+            }
+        });
+
+    }
+
+    /**
+     * Schedule a single execution of adjustLabelsFontSize() once the grid has a valid layout.
+     * This is robust against timing issues: it waits for grid.layoutBounds to become >0 and
+     * ensures we only schedule one pending adjustment at a time.
+     */
+    private void scheduleAdjustLabelsFontSize() {
+        if (adjustScheduled) return;
+        adjustScheduled = true;
+
+        // if grid already measured, run once on next pulse
+        if (grid.getWidth() > 0 && grid.getHeight() > 0) {
+            Platform.runLater(() -> {
+                try {
+                    grid.applyCss();
+                    grid.layout();
+                    adjustLabelsFontSize();
+                } finally {
+                    adjustScheduled = false;
+                }
+            });
+            return;
+        }
+
+        // otherwise wait for the grid layoutBounds to be available
+        ChangeListener<Bounds> boundsListener = new ChangeListener<>() {
+            @Override
+            public void changed(javafx.beans.value.ObservableValue<? extends Bounds> obs, Bounds oldB, Bounds newB) {
+                if (newB.getWidth() > 0 && newB.getHeight() > 0) {
+                    // remove listener and schedule adjustment on FX thread
+                    grid.layoutBoundsProperty().removeListener(this);
+                    Platform.runLater(() -> {
+                        try {
+                            grid.applyCss();
+                            grid.layout();
+                            adjustLabelsFontSize();
+                        } finally {
+                            adjustScheduled = false;
+                        }
+                    });
+                }
+            }
+        };
+        grid.layoutBoundsProperty().addListener(boundsListener);
+    }
+
+
+    /** helper: check if ALL labels fit when rendered with the given font size into given bounds */
+    private boolean allLabelsFitWithFont(List<Label> labels,
+                                         String family,
+                                         int fontSize,
+                                         double wrapWidth,
+                                         double maxHeight) {
+        if (wrapWidth <= 0 || maxHeight <= 0) return false;
+        for (Label lbl : labels) {
+            String text = lbl.getText();
+            if (text == null) text = "";
+
+            // use Text node to measure wrapped text height precisely
+            Text measuring = new Text(text);
+            measuring.setFont(Font.font(family, fontSize));
+            measuring.setWrappingWidth(wrapWidth);
+            // width is controlled by wrappingWidth; now measure height
+            double measuredH = measuring.getLayoutBounds().getHeight();
+
+            // safety margin: allow a couple pixels
+            if (measuredH > maxHeight + 1.0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     /* ----------------------------------------------------------------------
        CardFactory: helper to build cards with distinct front (text) and back (image).
        The factory stores references in the Node properties for easy access.
@@ -442,37 +800,40 @@ public class ShuffleController {
         }
 
         static StackPane createCard(String text) {
-            // front label with wrapping and centered alignment
+            // front label: wrap text, centered. actual sizing is controlled by responsive bindings.
             Label frontLabel = new Label(text);
             frontLabel.getStyleClass().add("card-front");
             frontLabel.setWrapText(true);
-            frontLabel.setMaxWidth(220); // adapt to your card width
+            frontLabel.setMaxWidth(Double.MAX_VALUE); // allow parent / bindings to control width
             frontLabel.setAlignment(Pos.CENTER);
             frontLabel.setTextAlignment(TextAlignment.CENTER);
 
+            // front container: leave pref size to computed (do not hardcode sizes here)
             StackPane front = new StackPane(frontLabel);
-            front.setPrefSize(240, 160); // match your CSS/design
+            front.setPrefSize(javafx.scene.layout.Region.USE_COMPUTED_SIZE, javafx.scene.layout.Region.USE_COMPUTED_SIZE);
 
+            // back image: preserve ratio, do not set fixed fit here (bindings will apply)
             ImageView backView = new ImageView(backImage);
-            backView.setFitWidth(240);
-            backView.setFitHeight(160);
             backView.setPreserveRatio(true);
+            backView.setSmooth(true);
             backView.getStyleClass().add("card-back");
 
-            // order: front above back, visibility controlled by showFront/showBack
+            // stack front over back; visibility toggled by showFront/showBack
             StackPane card = new StackPane(front, backView);
             card.getStyleClass().add("card");
-
+            frontLabel.maxWidthProperty().bind(card.widthProperty().multiply(0.9));
+            // initial state: show front (topic text), hide back (logo)
             front.setVisible(true);
             backView.setVisible(false);
 
-            // store references for later retrieval
+            // store references for later access (showFront/showBack, label extraction, responsive bindings)
             card.getProperties().put("front", front);
             card.getProperties().put("back", backView);
             card.getProperties().put("frontLabel", frontLabel);
 
             return card;
         }
+
 
         static void showBack(StackPane card) {
             Object frontObj = card.getProperties().get("front");
