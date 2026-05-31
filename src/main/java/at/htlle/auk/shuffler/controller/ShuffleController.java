@@ -1,5 +1,6 @@
 package at.htlle.auk.shuffler.controller;
 
+import at.htlle.auk.shuffler.csvreader.TopicFiller;
 import at.htlle.auk.shuffler.model.Topic;
 import javafx.animation.*;
 import javafx.application.Platform;
@@ -53,13 +54,10 @@ public class ShuffleController {
     // debounce for resize events
     private final PauseTransition fontResizeDebounce = new PauseTransition(Duration.millis(180));
 
-    // last applied font size (optional, for debugging)
-    private double lastAppliedFontSize = -1;
-
     // guards scheduling so we don't attach multiple listeners
     private boolean adjustScheduled = false;
 
-
+    @FXML private javafx.scene.control.Button newRoundButton;
     @FXML private GridPane grid;
     @FXML private ComboBox<String> subjectCombo;
     @FXML private TextField nameField;
@@ -72,90 +70,10 @@ public class ShuffleController {
 
     @FXML
     public void initialize() {
-        subjectTopics = Map.of(
-                "UFW", List.of(
-                        new Topic("1 Unternehmensrecht und öffentliches Wirtschaftsrecht"),
-                        new Topic("2 Arbeits- und Steuerrecht"),
-                        new Topic("3 Privatrecht"),
-                        new Topic("4 Personalmanagement, Entrepreneurship und Innovation"),
-                        new Topic("5 Marketing und Vertrieb"),
-                        new Topic("6 Buchhaltung und Bilanzierung"),
-                        new Topic("7 Finanzierung und Investitionsrechnung"),
-                        new Topic("8 Controlling und Mitarbeiterführung")
-                ),
-                "BET", List.of(
-                        new Topic("1 Materialwirtschaft, Logistik"),
-                        new Topic("2 Vollkostenrechnung"),
-                        new Topic("3 Teilkostenrechnung und sonstige Systeme der Kostenrechnung"),
-                        new Topic("4 Arbeitsvorbereitung, Produktionsplanung und -steuerung"),
-                        new Topic("5 Unternehmensorganisation, Arbeitsplatz- und Betriebsstättenplanung"),
-                        new Topic("6 Projektmanagement"),
-                        new Topic("7 Qualitätsmanagementsysteme"),
-                        new Topic("8 Statistische Methoden im Qualitäts- und Umweltmanagement")
-                ),
-                "INFI", List.of(
-                        new Topic("1 IT-Hardware"),
-                        new Topic("2 Betriebssysteme"),
-                        new Topic("3 Office Suite"),
-                        new Topic("4 Betriebsdatenerfassung"),
-                        new Topic("5 Materialwirtschaft im ERP-System"),
-                        new Topic("6 Produktionsplanung und -steuerung im ERP-System"),
-                        new Topic("7 Vertrieb im ERP-System"),
-                        new Topic("8 Informationssysteme ")
-                ),
-                "NTVS", List.of(
-                        new Topic("1 Netzwerktechnik"),
-                        new Topic("2 Virtualisierung"),
-                        new Topic("3 Embedded Systems"),
-                        new Topic("4 Industrie 4.0"),
-                        new Topic("5 API Technologien"),
-                        new Topic("6 Robotik"),
-                        new Topic("7 Gleichstrom und Halbleitertechnik"),
-                        new Topic("8 Computer Vision")
-                ),
-                "SYP", List.of(
-                        new Topic("1 Seq. Projektmanagement"),
-                        new Topic("2 Agile Methoden"),
-                        new Topic("3 Entwicklungstools"),
-                        new Topic("4 Systemkonzeption"),
-                        new Topic("5 Dokumentation"),
-                        new Topic("6 Risikomanagement"),
-                        new Topic("7 Abschätzungen"),
-                        new Topic("8 Systembetreuung")
-                ),
-                "POS", List.of(
-                        new Topic("1 Objektorientierte Programmierung"),
-                        new Topic("2 Vererbung, abstrakte Klassen, Interfaces"),
-                        new Topic("3 komplexe Datenstrukturen und Algorithmen"),
-                        new Topic("4 Design Patterns"),
-                        new Topic("5 Multithreading"),
-                        new Topic("6 GUI Development"),
-                        new Topic("7 Testing"),
-                        new Topic("8 Development Tools")
-                ),
-                "GGP", List.of(
-                        new Topic("1 Europa im Wandel (GGP-Fächerverbindend)"),
-                        new Topic("2 Globale Entwicklungstrends (GGP-Fächerverbindend)"),
-                        new Topic("3 Trends in der Sozialgeographie"),
-                        new Topic("4 Wirtschaftsräume und Wirtschaftspolitik"),
-                        new Topic("5 Die Erde im Wandel"),
-                        new Topic("6 Wechselwirkungen von Kultur, Gesellschaft und Wirtschaft in der Geschichte"),
-                        new Topic("7 Historische politische Entwicklungen und Konflikte sowie die Bedeutung für die Gegenwart"),
-                        new Topic("8 Politische Ideologien, Systeme und Akteure")
-                ),
-                "NAWI", List.of(
-                        new Topic("1 Teilchenstruktur der Materie - woraus alles besteht"),
-                        new Topic("2 Energie, Elektrizität und erneuerbare Energieträger"),
-                        new Topic("3 Ruhende und bewegte Körper und Medien"),
-                        new Topic("4 Mechanische Wellen; optische und akustische Phänomene"),
-                        new Topic("5 Wärme in Alltag und Technik"),
-                        new Topic("6 Moderne Physik und ihre Anwendungen"),
-                        new Topic("7 Anorganische Rohstoffe und ihre Veredelung"),
-                        new Topic("8 Organische Grundstoffe und ihre Verwendung"),
-                        new Topic("9 Stoffumwandlungen und ökologische Aspekte in den Naturwissenschaften"),
-                        new Topic("10 Grundlagen lebendiger Systeme")
-                )
-        );
+        if (newRoundButton != null) {
+            newRoundButton.setDisable(true);
+        }
+        subjectTopics = TopicFiller.fillTopics();
         subjectCombo.getItems().addAll(subjectTopics.keySet());
         subjectCombo.setOnAction(e -> loadTopics());
         subjectCombo.getSelectionModel().selectFirst();
@@ -184,7 +102,7 @@ public class ShuffleController {
             fontResizeDebounce.playFromStart();
             scheduleAdjustLabelsFontSize();
         });
-
+        
     }
 
     /**
@@ -363,6 +281,36 @@ public class ShuffleController {
         new SequentialTransition(flip1, flip2).play();
     }
 
+    @FXML
+    private void onNewRound() {
+        // keep same subject, reinitialize cards and UI state (do not clear name)
+        String subject = subjectCombo == null ? null : subjectCombo.getValue();
+        if (subject == null) return;
+
+        // clear selection state
+        selected.clear();
+        isShuffled = false;
+
+        // clear existing cards/grid
+        grid.getChildren().clear();
+        cards.clear();
+
+        // recreate cards for the same subject (uses your existing topic storage)
+        List<at.htlle.auk.shuffler.model.Topic> topics = subjectTopics.getOrDefault(subject, Collections.emptyList());
+        for (at.htlle.auk.shuffler.model.Topic t : topics) {
+            StackPane card = CardFactory.createCard(t.getName());
+            card.setOnMouseClicked(this::onCardClicked);
+            cards.add(card);
+        }
+
+
+        nameField.clear();
+        // layout and adjust fonts / bindings using your existing helper methods
+        layoutCards();
+
+        // newRoundButton remains enabled (user can start multiple rounds) until finalization disables it
+    }
+
     /**
      * Reveal all non-selected cards, immediately dim & deactivate them,
      * then enable final choice on the two selected cards.
@@ -477,8 +425,18 @@ public class ShuffleController {
 
         // keep the other selected card as yellow: do NOT remove "selected" class
         // The chosen card already has "chosen" added; both will remain visible.
+        // ensure button disabled immediately after finalization
+        if (newRoundButton != null) {
+            newRoundButton.setDisable(true);
 
-        // Optionally: keep 'selected' list if you need it later; do not clear it here.
+            // re-enable after 5 seconds
+            PauseTransition pt = new PauseTransition(Duration.seconds(5));
+            pt.setOnFinished(ev -> {
+                if (newRoundButton != null) newRoundButton.setDisable(false);
+            });
+            pt.play();
+        }
+
     }
 
     /**
@@ -679,7 +637,7 @@ public class ShuffleController {
         // determine the longest text among labels (we will check all labels though)
         // do a binary search on font size between reasonable bounds
         int lo = 8;     // minimal readable font
-        int hi = 120;   // upper bound (will be clamped by measurements)
+        int hi = 90;   // upper bound (will be clamped by measurements)
         int best = lo;
 
         // Use the family of the first label (preserve style)

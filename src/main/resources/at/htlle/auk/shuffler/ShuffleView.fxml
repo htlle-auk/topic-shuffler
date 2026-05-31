@@ -34,7 +34,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Subject:" />
-                <ComboBox fx:id="subjectCombo" prefWidth="220.0" />
+                <ComboBox fx:id="subjectCombo" prefWidth="420.0" style="-fx-alignment: CENTER;" />
             </children>
         </HBox>
         
@@ -50,6 +50,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Button text="Karten mischen" onAction="#onShuffle" />
+                <Button fx:id="newRoundButton" text="Neustart" onAction="#onNewRound" disable="true" />
             </children>
         </HBox>
 

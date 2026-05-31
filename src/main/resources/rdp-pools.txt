@@ -1,0 +1,243 @@
+LOG - Logistik
+Fabriksplanung
+Simulation von Logistiksystemen
+Intralogistik
+Beschaffungs- und Produktionslogistik
+Distributionslogistik
+Qualitätsmanagement
+Prozessmanagement
+Umweltmanagement
+
+RECE - Recycling und Energietechnik 
+Technische Recyclinggrundlagen
+Metall- und Inertstoffrecycling
+Papier- und Kunststoffrecycling
+Mechanische Verfahrenstechnik
+Chemische und Thermische Verfahrenstechnik
+Nachhaltigkeit und Strategien in der Abfallwirtschaft
+Einsatz von Technologien zur Schadstoffverringerung
+Energieformen, Nutzung und Umwandlungen, Umweltrecht und Sicherheitstechnik
+
+UFW - Unternehmensführung und Wirtschaftsrecht
+Unternehmensrecht und öffentliches Wirtschaftsrecht
+Arbeits- und Steuerrecht
+Privatrecht
+Personalmanagement, Entrepreneurship und Innovation
+Marketing und Vertrieb
+Buchhaltung und Bilanzierung
+Finanzierung und Investitionsrechnung
+Controlling und Mitarbeiterführung
+
+BET - Betriebstechnik
+Materialwirtschaft, Logistik
+Vollkostenrechnung
+Teilkostenrechnung und sonstige Systeme der Kostenrechnung
+Arbeitsvorbereitung, Produktionsplanung und -steuerung
+Unternehmensorganisation, Arbeitsplatz- und Betriebsstättenplanung
+Projektmanagement
+Qualitätsmanagementsysteme
+Statistische Methoden im Qualitäts- und Umweltmanagement
+
+INFI - Informatik und Informationssysteme
+IT-Hardware
+Betriebssysteme
+Office Suite
+Betriebsdatenerfassung
+Materialwirtschaft im ERP-System
+Produktionsplanung und -steuerung im ERP-System
+Vertrieb im ERP-System
+Informationssysteme
+
+NTVS - Netzwerktechnik und Verteilte Systeme
+Netzwerktechnik
+Virtualisierung
+Embedded Systems
+Industrie 4.0
+API Technologien
+Robotik
+Gleichstrom und Halbleitertechnik
+Computer Vision
+
+SYP - Systemplanung und Projektentwicklung
+Seq. Projektmanagement
+Agile Methoden
+Entwicklungstools
+Systemkonzeption
+Dokumentation
+Risikomanagement
+Abschätzungen
+Systembetreuung
+
+POS - Programmieren und Software Engineering
+Objektorientierte Programmierung
+Vererbung, abstrakte Klassen, Interfaces
+Komplexe Datenstrukturen und Algorithmen
+Design Patterns
+Multithreading
+GUI Development
+Testing
+Development Tools
+
+RK - Religion
+Den Glauben feiern
+Glaube und Vernunft	
+Christliche Ethik	
+Abrahamitische Religionen	
+Religionen süd- und ostasiatischen Ursprungs	
+Bibel – Dokument des Glaubens	
+Jesus, der Christus	
+Meilensteine der Kirchengeschichte	
+
+REV - Religion
+Konstruktive Auseinandersetzung mit unterschiedlichen religiösen Lebensentwürfen
+Christliche Ethik und ihre alltägliche Relevanz
+Jesus von Nazareth und seine Botschaft
+Die Bibel als Literatur
+Eintreten für Gerechtigkeit und Frieden als zentrale christliche Herausforderung
+Die Frage nach gelingendem Leben
+Sterben und Tod als Teil des Lebens
+Evangelische Identität
+Der Umgang mit dem Fremden
+Widerstand als Ausdruck protestantischer Gesinnung
+
+GGP - Geografie, Geschichte und politische Bildung
+Europa im Wandel (GGP-Fächerverbindend)
+Globale Entwicklungstrends (GGP-Fächerverbindend)
+Trends in der Sozialgeographie
+Wirtschaftsräume und Wirtschaftspolitik
+Die Erde im Wandel
+Wechselwirkungen von Kultur, Gesellschaft und Wirtschaft in der Geschichte
+Historische politische Entwicklungen und Konflikte sowie die Bedeutung für die Gegenwart
+Politische Ideologien, Systeme und Akteure
+
+NAWI - Naturwissenschaften
+Teilchenstruktur der Materie - woraus alles besteht	
+Energie, Elektrizität und erneuerbare Energieträger	
+Ruhende und bewegte Körper und Medien	
+Mechanische Wellen; optische und akustische Phänomene	
+Wärme in Alltag und Technik	
+Moderne Physik und ihre Anwendungen	
+Anorganische Rohstoffe und ihre Veredelung	
+Organische Grundstoffe und ihre Verwendung	
+Stoffumwandlungen und ökologische Aspekte in den Naturwissenschaften	
+Grundlagen lebendiger Systeme	
+
+D - Deutsch
+Medien und Kommunikation
+Helden, Antihelden und Außenseiter
+Mensch, Umwelt, Technik
+Mensch und Gesellschaft
+Traditionen
+Lektüren und Textwelten	
+(Österreichischer) Humor
+Todesmystik
+
+E - Englisch
+Arbeitswelt, Citizenship, Ethik und Menschenrechte
+Gesundheit und Ernährung
+Kommunikation und Medien, soziale und zwischenmenschliche Beziehungen
+Lebensstile, Schule, Ausbildung und persönliche Perspektive
+Sprachen, Kunst und Kulturen, Tourismus und Reisen
+Umwelt und Lebensqualität
+Wirtschaft und Geschäftsleben
+Innovationen und Technologien
+
+ETH - Ethik
+Grundlagen der Ethik
+Persönlichkeitsentwicklung
+Menschenrechte
+Weltanschauungen, Religionen
+Bio- und Medizinethik
+Wirtschaft, Recht, Technik
+Medienethik und Kommunikation
+Anthropologie
+
+GGR - Geologie und Gewinnung von Rohstoffen
+Mineralogie, Petrologie und Aufsuchen von Rohstoffen 
+Allgemeine Geologie 
+Lagerstättenkunde 
+Tagebau 
+Untertagebau
+Bodenmechanik 
+Markscheide- und Vermessungswesen
+Geotechnik 
+
+AVR - Aufbereitung und Verarbeitung von Rohstoffen
+Zerkleinerung 
+Klassierung 
+Sortierverfahren 
+Analytik und Prüftechnik 
+Veredlung und Grundstoffherstellung 
+Sekundärrohstoffe und Recycling 
+Hilfsprozesse der Aufbereitung und Veredelung 
+Umweltaspekte bei der Rohstoffverarbeitung 
+
+DES - Technisches und Computanional Design
+Statik des starren Körpers
+Beanspruchungsarten
+Kinematik
+Kinetik
+Hydrostatik
+Hydrodynamik
+Biegebalken
+Werkstoffmechanik
+
+UVT - Umwelt und Verfahrenstechnik
+Klimawandel, Ökosysteme, Klimapolitik
+Recyclinggrundlagen
+Grundlagen zukünftiger Technologien für nachhaltige Ressourcennutzung
+Abwasserbehandlung
+Abgasbehandlung
+Energiebereitstellung, Energiebedarf und erneuerbare Energien
+Thermische Trennverfahren
+Abfallmanagement und Grundlagen des Recyclings im Kontext der Kreislaufwirtschaft
+
+FUMSM - Funktionale Materialien und Smart Materials
+Materialkundliche Grundlagen
+Werkstoffe für die Medizintechnik
+Smart Materials
+Oberflächentechnik und -charakterisierung
+Sensorik und Aktorik
+Beschichtungen
+IC: Herstellung und Anwendung
+LED und OLED
+
+STM - Strukturmaterialien
+Grundlagen der Strukurmaterialien
+Zweistoffsysteme
+Wärmebehandlungsverfahren
+Korrosion und Tribologie
+Materialien für Automobilindustrie
+Materialien für schienengebundene Mobilität
+Materialien für Anwendungen in der Energie- und Umwelttechnik
+Materialien für Anwendungen in der Luft- und Raumfahrt
+
+STFW - Struktur- und Funktionswerkstoffe
+Beschichtungen
+Grundlagen metallischer Werkstoffe
+Zweistoffsysteme
+Grundlegende metallurgische Diagramme und Schaubilder
+Ausgewählte Anwendungen metallsicher Werkstoffe - Automobilindustrie, Urbanisierung
+Werkstofftechnik der Nichteisenmetalle
+Werkstoffe für die Metallbearbeitung
+Chemisch beständige Stähle
+
+ENET - Energietechnik
+Thermodynamische Kreisprozesse
+Elektrotechnische Grundlagen
+Verbrennungsrechnung
+Wasserstoffherstellung und -speicherung
+Stromnetz allgemein
+Wechselrichter/Gleichrichter
+Grundlagen zu Energieformen, Energienutzung und Energieumwandlung
+Drehstromnetz und Hochspannungsgleichstromübertragung
+
+METPVT - Metallurgische Prozess- und Verfahrenstechnik
+Erzvorbereitungsverfahren (Sintern, Pelletieren)
+Anlagentechnik und Metallurgie des Hochofens
+Sekundärmetallurgie in der Eisen- und Stahlherstellung
+Gießtechnik im Bereich der modernen Stahlerzeugung
+Grundlagen zu hydro- und pyrometallurgischen Gewinnungs- und Raffinationsprozessen
+Primärmetallurgie und Recycling von Aluminium
+Primärmetallurgie und Recycling von Kupfer
+Recyclingprozesse für ausgewählte Reststoffe
