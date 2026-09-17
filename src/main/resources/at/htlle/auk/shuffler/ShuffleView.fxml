@@ -34,7 +34,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Subject:" />
-                <ComboBox fx:id="subjectCombo" prefWidth="220.0" />
+                <ComboBox fx:id="subjectCombo" prefWidth="220.0"/>
             </children>
         </HBox>
         
