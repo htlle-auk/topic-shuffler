@@ -34,7 +34,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Subject:" />
-                <ComboBox fx:id="subjectCombo" prefWidth="220.0" />
+                <ComboBox fx:id="subjectCombo" prefWidth="440.0" />
             </children>
         </HBox>
         
@@ -42,7 +42,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Name:" />
-                <TextField fx:id="nameField" promptText="optional (will be logged if filled)" />
+                <TextField fx:id="nameField" prefWidth="300" promptText="optional (will be logged if filled)" />
             </children>
         </HBox>
 

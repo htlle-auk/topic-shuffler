@@ -1,1 +1,1 @@
-mvnw clean javafx:run
+mvnw compile javafx:run

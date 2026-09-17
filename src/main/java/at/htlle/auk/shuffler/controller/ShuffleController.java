@@ -72,8 +72,8 @@ public class ShuffleController {
 
     @FXML
     public void initialize() {
-        subjectTopics = Map.of(
-                "UFW", List.of(
+        subjectTopics = Map.ofEntries(
+                Map.entry("UFW - Unternehmensführung und Wirtschaftsrecht", List.of(
                         new Topic("1 Unternehmensrecht und öffentliches Wirtschaftsrecht"),
                         new Topic("2 Arbeits- und Steuerrecht"),
                         new Topic("3 Privatrecht"),
@@ -82,8 +82,8 @@ public class ShuffleController {
                         new Topic("6 Buchhaltung und Bilanzierung"),
                         new Topic("7 Finanzierung und Investitionsrechnung"),
                         new Topic("8 Controlling und Mitarbeiterführung")
-                ),
-                "BET", List.of(
+                )),
+                Map.entry("BET - Betriebstechnik", List.of(
                         new Topic("1 Materialwirtschaft, Logistik"),
                         new Topic("2 Vollkostenrechnung"),
                         new Topic("3 Teilkostenrechnung und sonstige Systeme der Kostenrechnung"),
@@ -92,8 +92,8 @@ public class ShuffleController {
                         new Topic("6 Projektmanagement"),
                         new Topic("7 Qualitätsmanagementsysteme"),
                         new Topic("8 Statistische Methoden im Qualitäts- und Umweltmanagement")
-                ),
-                "INFI", List.of(
+                )),
+                Map.entry("INFI - Informatik und Informationssysteme", List.of(
                         new Topic("1 IT-Hardware"),
                         new Topic("2 Betriebssysteme"),
                         new Topic("3 Office Suite"),
@@ -102,8 +102,8 @@ public class ShuffleController {
                         new Topic("6 Produktionsplanung und -steuerung im ERP-System"),
                         new Topic("7 Vertrieb im ERP-System"),
                         new Topic("8 Informationssysteme ")
-                ),
-                "NTVS", List.of(
+                )),
+                Map.entry("NTVS - Netzwerktechnik und Verteilte Systeme", List.of(
                         new Topic("1 Netzwerktechnik"),
                         new Topic("2 Virtualisierung"),
                         new Topic("3 Embedded Systems"),
@@ -112,8 +112,8 @@ public class ShuffleController {
                         new Topic("6 Robotik"),
                         new Topic("7 Gleichstrom und Halbleitertechnik"),
                         new Topic("8 Computer Vision")
-                ),
-                "SYP", List.of(
+                )),
+                Map.entry("SYP - Systemplanung und Projektentwicklung", List.of(
                         new Topic("1 Seq. Projektmanagement"),
                         new Topic("2 Agile Methoden"),
                         new Topic("3 Entwicklungstools"),
@@ -122,8 +122,8 @@ public class ShuffleController {
                         new Topic("6 Risikomanagement"),
                         new Topic("7 Abschätzungen"),
                         new Topic("8 Systembetreuung")
-                ),
-                "POS", List.of(
+                )),
+                Map.entry("POS - Programmieren und Software Engineering", List.of(
                         new Topic("1 Objektorientierte Programmierung"),
                         new Topic("2 Vererbung, abstrakte Klassen, Interfaces"),
                         new Topic("3 komplexe Datenstrukturen und Algorithmen"),
@@ -132,8 +132,8 @@ public class ShuffleController {
                         new Topic("6 GUI Development"),
                         new Topic("7 Testing"),
                         new Topic("8 Development Tools")
-                ),
-                "GGP", List.of(
+                )),
+                Map.entry("GGP - Geographie, Geschichte und politische Bildung", List.of(
                         new Topic("1 Europa im Wandel (GGP-Fächerverbindend)"),
                         new Topic("2 Globale Entwicklungstrends (GGP-Fächerverbindend)"),
                         new Topic("3 Trends in der Sozialgeographie"),
@@ -142,8 +142,8 @@ public class ShuffleController {
                         new Topic("6 Wechselwirkungen von Kultur, Gesellschaft und Wirtschaft in der Geschichte"),
                         new Topic("7 Historische politische Entwicklungen und Konflikte sowie die Bedeutung für die Gegenwart"),
                         new Topic("8 Politische Ideologien, Systeme und Akteure")
-                ),
-                "NAWI", List.of(
+                )),
+                Map.entry("NAWI - Naturwissenschaften", List.of(
                         new Topic("1 Teilchenstruktur der Materie - woraus alles besteht"),
                         new Topic("2 Energie, Elektrizität und erneuerbare Energieträger"),
                         new Topic("3 Ruhende und bewegte Körper und Medien"),
@@ -154,9 +154,181 @@ public class ShuffleController {
                         new Topic("8 Organische Grundstoffe und ihre Verwendung"),
                         new Topic("9 Stoffumwandlungen und ökologische Aspekte in den Naturwissenschaften"),
                         new Topic("10 Grundlagen lebendiger Systeme")
-                )
+                )),
+                Map.entry("RK - Religion katholisch", List.of(
+                        new Topic("Den Glauben feiern"),
+                        new Topic("Glaube und Vernunft"),
+                        new Topic("Christliche Ehtik"),
+                        new Topic("Abrahamitische Religionen"),
+                        new Topic("Religionen süd- und ostasiatischen Ursprungs"),
+                        new Topic("Bibel - Dokument des Glaubens"),
+                        new Topic("Jesus, der Christus"),
+                        new Topic("Meilensteine der Kirchengeschichte")
+                )),
+                Map.entry("REV - Religion evangelisch", List.of(
+                        new Topic("Konstruktive Auseinandersetzung mit unterschiedlichen religiösen Lebensentwürfen"),
+                        new Topic("Christliche Ethik und ihre alltägliche Relevanz"),
+                        new Topic("Jesus von Nazareth und seine Botschaft"),
+                        new Topic("Die Bibel als Literatur"),
+                        new Topic("Eintreten für Gerechtigkeit und Frieden als zentrale christliche Herausforderung"),
+                        new Topic("Die Frage nach gelingendem Leben"),
+                        new Topic("Sterben und Tod als Teil des Lebens"),
+                        new Topic("Evangelische Identität"),
+                        new Topic("Der Umgang mit dem Fremden"),
+                        new Topic("Widerstand als Ausdruck protestantischer Gesinnung")
+                )),
+                Map.entry("D - Deutsch", List.of(
+                        new Topic("Medien und Kommunikation"),
+                        new Topic("Helden, Antihelden und Außenseiter"),
+                        new Topic("Mensch, Umwelt, Technik"),
+                        new Topic("Mensch und Gesellschaft"),
+                        new Topic("Traditionen"),
+                        new Topic("Lektüren und Textwelten"),
+                        new Topic("Österreichischer Humor"),
+                        new Topic("Todesmystik")
+                )),
+                Map.entry("ETH - Ethik", List.of(
+                        new Topic("Grundlagen der Ethik"),
+                        new Topic("Persönlichkeitsentwicklung"),
+                        new Topic("Menschenrechte"),
+                        new Topic("Weltanschauungen, Religionen"),
+                        new Topic("Bio- und Medizinethik"),
+                        new Topic("Wirtschaft, Recht, Technik"),
+                        new Topic("Medienethik und Kommunikation"),
+                        new Topic("Anthropologie")
+                )),
+                Map.entry("ENG - Englisch", List.of(
+                        new Topic("Arbeitswelt, Citizenship, Ethik und Menschenrechte"),
+                        new Topic("Gesundheit und Ernährung"),
+                        new Topic("Kommunikation und Medien, soziale und zwischenmenschliche Beziehungen"),
+                        new Topic("Lebensstile, Schule, Ausbildung und persönliche Perspektive"),
+                        new Topic("Sprachen, Kunst und Kulturen, Tourismus und Reisen"),
+                        new Topic("Umwelt und Lebensqualität"),
+                        new Topic("Wirtschaft und Geschäftsleben"),
+                        new Topic("Innovationen und Technologien")
+                )),
+                Map.entry("RIS - Religion Islam", List.of(
+                        new Topic("Der Prophet Muhammad a.s - Sira und Sunna"),
+                        new Topic("Das Gebet"),
+                        new Topic("Kur´an und Wissenschaft"),
+                        new Topic("Islam-Iman-Ihsan"),
+                        new Topic("Die Zakat - soziale Pflichtabgabe"),
+                        new Topic("Die Pilgerfahrt"),
+                        new Topic("Mann und Frau im Islam"),
+                        new Topic("Muslime in Österreich")
+                )),
+                Map.entry("L - Logistik", List.of(
+                        new Topic("Fabriksplanung"),
+                        new Topic("Simulation von Logistiksystemen"),
+                        new Topic("Intralogistik"),
+                        new Topic("Beschaffungs- und Produktionslogistik"),
+                        new Topic("Distributionslogistik"),
+                        new Topic("Qualitätsmanagement"),
+                        new Topic("Prozessmanagement"),
+                        new Topic("Umweltmanagement")
+                )),
+                Map.entry("RECE - Recycling und Energietechnik", List.of(
+                        new Topic("Technische Recyclinggrundlagen"),
+                        new Topic("Metall- und Inertstoffrecycling"),
+                        new Topic("Papier- und Kunststoffrecycling"),
+                        new Topic("Mechanische Verfahrenstechnik"),
+                        new Topic("Chemische und Thermische Verfahrenstechnik"),
+                        new Topic("Nachhaltigkeit und Strategien in der Abfallwirtschaft"),
+                        new Topic("Einsatz von Technologien zur Schadstoffverringerung"),
+                        new Topic("Energieformen, Nutzung und Umwandlungen, Umweltrecht und Sicherheitstechnik")
+                )),
+                Map.entry("GGR - Geologie und Gewinnung von Rohstoffen", List.of(
+                        new Topic("Mineralogie, Petrologie und Aufsuchen von Rohstoffen"),
+                        new Topic("Allgemeine Geologie"),
+                        new Topic("Lagerstättenkunde"),
+                        new Topic("Tagebau"),
+                        new Topic("Untertagebau"),
+                        new Topic("Bodenmechanik"),
+                        new Topic("Markscheide- und Vermessungswesen"),
+                        new Topic("Geotechnik")
+                )),
+                Map.entry("AVR - Aufbereitung und Verarbeitung von Rohstoffen", List.of(
+                        new Topic("Zerkleinerung"),
+                        new Topic("Klassierung"),
+                        new Topic("Sortierverfahren"),
+                        new Topic("Analytik und Prüftechnik"),
+                        new Topic("Veredelung und Grundstoffherstellung"),
+                        new Topic("Sekundärrohstoffe und Recycling"),
+                        new Topic("Hilfsprozesse der Aufbereitung und Veredelung"),
+                        new Topic("Umweltaspekte bei der Rohstoffverarbeitung")
+                )),
+                Map.entry("UVT - Umwelt und Verfahrenstechnik", List.of(
+                        new Topic("Klimawandel, Ökosysteme, Klimapolitik"),
+                        new Topic("Recyclinggrundlagen"),
+                        new Topic("Grundlagen zukünftiger Technologien für nachhaltige Ressourcennutzung"),
+                        new Topic("Abwasserbehandlung"),
+                        new Topic("Abgasbehandlung"),
+                        new Topic("Energiebereitstellung, Energiebedarf und erneuerbare Energien"),
+                        new Topic("Thermische Trennverfahren"),
+                        new Topic("Abfallmanagement und Grundlagen des Recyclings im Kontext der Kreislaufwirtschaft")
+                )),
+                Map.entry("FUMSM - Funktionale Materialien und Smart Materials", List.of(
+                        new Topic("Materialkundliche Grundlagen"),
+                        new Topic("Werkstoffe für die Medizintechnik"),
+                        new Topic("Smart Materials"),
+                        new Topic("Oberflächentechnik und -charakterisierung"),
+                        new Topic("Sensorik und Aktorik"),
+                        new Topic("Beschichtungen"),
+                        new Topic("IC: Herstellung und Anwendung"),
+                        new Topic("LED und OLED")
+                )),
+                Map.entry("STM - Strukturmaterialien", List.of(
+                        new Topic("Grundlagen der Strukturmaterialien"),
+                        new Topic("Zweistoffsysteme"),
+                        new Topic("Wärmebehandlungsverfahren"),
+                        new Topic("Korrosion und Tribologie"),
+                        new Topic("Materialien für Automobilindustrie"),
+                        new Topic("Materialien für schienengebundene Mobilität"),
+                        new Topic("Materialien für Anwendungen in der Energie- und Umwelttechnik"),
+                        new Topic("Materialien für Anwendungen in der Luft- und Raumfahrt")
+                )),
+                Map.entry("STFW - Struktur und Funktionswerkstoffe", List.of(
+                        new Topic("Beschichtungen"),
+                        new Topic("Grundlagen metallischer Werkstoffe"),
+                        new Topic("Zweistoffsysteme"),
+                        new Topic("Grundlegende metallurgische Diagramme und Schaubilder"),
+                        new Topic("Ausgewählte Anwendungen metallischer Werkstoffe - Automobilindustrie, Urbanisierung"),
+                        new Topic("Werkstofftechnik der Nichteisenmetalle"),
+                        new Topic("Werkstoffe für die Metallbearbeitung"),
+                        new Topic("Chemisch beständige Stähle")
+                )),
+                Map.entry("ENET - Energietechnik", List.of(
+                        new Topic("Thermodynamische Kreisprozesse"),
+                        new Topic("Elektrotechnische Grundlagen"),
+                        new Topic("Verbrennungsrechnung"),
+                        new Topic("Wasserstoffherstellung und -speicherung"),
+                        new Topic("Stromnetz allgemein"),
+                        new Topic("Wechselrichter / Gleichrichter"),
+                        new Topic("Grundlagen zu Energieformen, Energienutzung und Energieumwandlung"),
+                        new Topic("Drehstromnetz und Hochspannungsgleichstromübertragung")
+                )),
+                Map.entry("METPVT - Metallurgische Prozess- und Verfahrenstechnik", List.of(
+                        new Topic("Erzvorbereitungsverfahren (Sintern, Pelletieren)"),
+                        new Topic("Anlagentechnik und Metallurgie des Hochofens"),
+                        new Topic("Sekundärmetallurgie in der Eisen- und Stahlherstellung"),
+                        new Topic("Gießtechnik im Bereich der modernen Stahlerzeugung"),
+                        new Topic("Grundlagen zu hydro- und pyrometallurgischen Gewinnungs- und Raffinationsprozessen"),
+                        new Topic("Primärmetallurgie und Recycling von Aluminium"),
+                        new Topic("Primärmetallurgie und Recycling von Kupfer"),
+                        new Topic("Recyclingprozesse für ausgewählte Reststoffe")
+                )),
+                Map.entry("DES - Technisches und Computanional Design", List.of(
+                        new Topic("Statik des starren Körpers"),
+                        new Topic("Beanspruchungsarten"),
+                        new Topic("Kinematik"),
+                        new Topic("Kinetik"),
+                        new Topic("Hydrostatik"),
+                        new Topic("Hydrodynamik"),
+                        new Topic("Biegebalken"),
+                        new Topic("Werkstoffmechanik")
+                ))
         );
-        subjectCombo.getItems().addAll(subjectTopics.keySet());
+        subjectCombo.getItems().addAll(subjectTopics.keySet().stream().sorted().toList());
         subjectCombo.setOnAction(e -> loadTopics());
         subjectCombo.getSelectionModel().selectFirst();
         loadTopics();
@@ -250,6 +422,36 @@ public class ShuffleController {
         if (isShuffled) return;
         isShuffled = true;
 
+        // random order that is not predictable for the user
+        Collections.shuffle(cards, new java.security.SecureRandom());
+
+        grid.getChildren().clear();
+
+        for (int i = 0; i < cards.size(); i++) {
+            StackPane card = cards.get(i);
+
+            // reset any old animation state
+            card.setTranslateX(0);
+            card.setTranslateY(0);
+            card.setRotate(0);
+
+            // show only the back side
+            CardFactory.showBack(card);
+
+            // place in the new random order
+            grid.add(card, i % 4, i / 4);
+        }
+
+        grid.applyCss();
+        grid.layout();
+    }
+
+/* unsecure shuffle method
+    @FXML
+    private void onShuffle() {
+        if (isShuffled) return;
+        isShuffled = true;
+
         // 1) remember old scene positions
         Map<StackPane, Point2D> oldPositions = new HashMap<>();
         for (StackPane card : cards) {
@@ -318,7 +520,7 @@ public class ShuffleController {
             layoutCards();
         });
         all.play();
-    }
+    }*/
 
     /**
      * Handle card click: reveal card (back -> front). Up to two reveals allowed.
@@ -679,7 +881,7 @@ public class ShuffleController {
         // determine the longest text among labels (we will check all labels though)
         // do a binary search on font size between reasonable bounds
         int lo = 8;     // minimal readable font
-        int hi = 120;   // upper bound (will be clamped by measurements)
+        int hi = 60;   // upper bound (will be clamped by measurements)
         int best = lo;
 
         // Use the family of the first label (preserve style)
