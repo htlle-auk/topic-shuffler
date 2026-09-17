@@ -34,7 +34,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Subject:" />
-                <ComboBox fx:id="subjectCombo" prefWidth="440.0" />
+                <ComboBox fx:id="subjectCombo" prefWidth="220.0" />
             </children>
         </HBox>
         
@@ -42,7 +42,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Label text="Name:" />
-                <TextField fx:id="nameField" prefWidth="300" promptText="optional (will be logged if filled)" />
+                <TextField fx:id="nameField" promptText="optional (will be logged if filled)" />
             </children>
         </HBox>
 
@@ -50,6 +50,7 @@
         <HBox spacing="8" alignment="CENTER">
             <children>
                 <Button text="Karten mischen" onAction="#onShuffle" />
+                <Button fx:id="newRoundButton" text="Neustart" onAction="#onNewRound" disable="true" />
             </children>
         </HBox>
 

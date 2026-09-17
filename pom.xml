@@ -6,7 +6,7 @@
 
     <groupId>at.htlle.auk</groupId>
     <artifactId>shuffler</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
     <name>shuffler</name>
 
     <properties>
@@ -88,26 +88,14 @@
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
-              <!--
-                <executions>
-                    <execution>
-                         Default configuration for running with: mvn clean javafx:run -->
-        <!--                <id>default-cli</id>
-                        <configuration>
-                            <mainClass>at.htlle.auk.shuffler.Shuffler</mainClass>
-                            <launcher>app</launcher>
-                            <jlinkZipName>app</jlinkZipName>
-                            <jlinkImageName>app</jlinkImageName>
-                            <noManPages>true</noManPages>
-                            <stripDebug>true</stripDebug>
-                            <noHeaderFiles>true</noHeaderFiles>
-                        </configuration>
-                    </execution>
-                </executions>
-        -->
-
                 <configuration>
                     <mainClass>at.htlle.auk.shuffler.Shuffler</mainClass>
+                    <launcher>shuffler</launcher>
+                    <jlinkZipName>shuffler</jlinkZipName>
+                    <jlinkImageName>shuffler</jlinkImageName>
+                    <stripDebug>true</stripDebug>
+                    <noHeaderFiles>true</noHeaderFiles>
+                    <noManPages>true</noManPages>
                 </configuration>
 
             </plugin>
