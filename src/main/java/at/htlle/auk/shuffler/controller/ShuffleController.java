@@ -71,66 +71,6 @@ public class ShuffleController {
     @FXML
     public void initialize() {
         subjectTopics = Map.of(
-                "UFW", List.of(
-                        new Topic("1 Unternehmensrecht und öffentliches Wirtschaftsrecht"),
-                        new Topic("2 Arbeits- und Steuerrecht"),
-                        new Topic("3 Privatrecht"),
-                        new Topic("4 Personalmanagement, Entrepreneurship und Innovation"),
-                        new Topic("5 Marketing und Vertrieb"),
-                        new Topic("6 Buchhaltung und Bilanzierung"),
-                        new Topic("7 Finanzierung und Investitionsrechnung"),
-                        new Topic("8 Controlling und Mitarbeiterführung")
-                ),
-                "BET", List.of(
-                        new Topic("1 Materialwirtschaft, Logistik"),
-                        new Topic("2 Vollkostenrechnung"),
-                        new Topic("3 Teilkostenrechnung und sonstige Systeme der Kostenrechnung"),
-                        new Topic("4 Arbeitsvorbereitung, Produktionsplanung und -steuerung"),
-                        new Topic("5 Unternehmensorganisation, Arbeitsplatz- und Betriebsstättenplanung"),
-                        new Topic("6 Projektmanagement"),
-                        new Topic("7 Qualitätsmanagementsysteme"),
-                        new Topic("8 Statistische Methoden im Qualitäts- und Umweltmanagement")
-                ),
-                "INFI", List.of(
-                        new Topic("1 IT-Hardware"),
-                        new Topic("2 Betriebssysteme"),
-                        new Topic("3 Office Suite"),
-                        new Topic("4 Betriebsdatenerfassung"),
-                        new Topic("5 Materialwirtschaft im ERP-System"),
-                        new Topic("6 Produktionsplanung und -steuerung im ERP-System"),
-                        new Topic("7 Vertrieb im ERP-System"),
-                        new Topic("8 Informationssysteme ")
-                ),
-                "NTVS", List.of(
-                        new Topic("1 Netzwerktechnik"),
-                        new Topic("2 Virtualisierung"),
-                        new Topic("3 Embedded Systems"),
-                        new Topic("4 Industrie 4.0"),
-                        new Topic("5 API Technologien"),
-                        new Topic("6 Robotik"),
-                        new Topic("7 Gleichstrom und Halbleitertechnik"),
-                        new Topic("8 Computer Vision")
-                ),
-                "SYP", List.of(
-                        new Topic("1 Seq. Projektmanagement"),
-                        new Topic("2 Agile Methoden"),
-                        new Topic("3 Entwicklungstools"),
-                        new Topic("4 Systemkonzeption"),
-                        new Topic("5 Dokumentation"),
-                        new Topic("6 Risikomanagement"),
-                        new Topic("7 Abschätzungen"),
-                        new Topic("8 Systembetreuung")
-                ),
-                "POS", List.of(
-                        new Topic("1 Objektorientierte Programmierung"),
-                        new Topic("2 Vererbung, abstrakte Klassen, Interfaces"),
-                        new Topic("3 komplexe Datenstrukturen und Algorithmen"),
-                        new Topic("4 Design Patterns"),
-                        new Topic("5 Multithreading"),
-                        new Topic("6 GUI Development"),
-                        new Topic("7 Testing"),
-                        new Topic("8 Development Tools")
-                ),
                 "GGP", List.of(
                         new Topic("1 Europa im Wandel (GGP-Fächerverbindend)"),
                         new Topic("2 Globale Entwicklungstrends (GGP-Fächerverbindend)"),
@@ -248,7 +188,7 @@ public class ShuffleController {
         if (isShuffled) return;
         isShuffled = true;
 
-        // random order that is not predictable for the user
+        // random order, not predictable
         Collections.shuffle(cards, new java.security.SecureRandom());
 
         grid.getChildren().clear();
@@ -261,56 +201,10 @@ public class ShuffleController {
             card.setTranslateY(0);
             card.setRotate(0);
 
-            // show only the back side
-            CardFactory.showBack(card);
-
-            // place in the new random order
+            // place card in a random grid position
             grid.add(card, i % 4, i / 4);
-        }
 
-        grid.applyCss();
-        grid.layout();
-    }
-
-/* unsecure shuffle method
-    @FXML
-    private void onShuffle() {
-        if (isShuffled) return;
-        isShuffled = true;
-
-        // 1) remember old scene positions
-        Map<StackPane, Point2D> oldPositions = new HashMap<>();
-        for (StackPane card : cards) {
-            Point2D old = card.localToScene(0, 0);
-            oldPositions.put(card, old);
-        }
-
-        // 2) shuffle the card list
-        Collections.shuffle(cards);
-
-        // 3) put the cards immediately into the grid in the new order
-        grid.getChildren().clear();
-        for (int i = 0; i < cards.size(); i++) {
-            grid.add(cards.get(i), i % 4, i / 4);
-        }
-
-        // 4) force layout so nodes have correct new positions/sizes
-        grid.applyCss();
-        grid.layout();
-
-        // 5) compute new scene positions and set initial translate offsets (so they appear at old pos)
-        List<Animation> animations = new ArrayList<>();
-        for (StackPane card : cards) {
-            Point2D old = oldPositions.getOrDefault(card, card.localToScene(0, 0));
-            Point2D now = card.localToScene(0, 0);
-
-            // set offset so card visually stays at old position (but is actually in new grid cell)
-            double offsetX = old.getX() - now.getX();
-            double offsetY = old.getY() - now.getY();
-            card.setTranslateX(offsetX);
-            card.setTranslateY(offsetY);
-
-            // 6) flip to back (two-phase) and then animate translate to (0,0)
+            // flip card to back
             RotateTransition flip1 = new RotateTransition(Duration.millis(180), card);
             flip1.setAxis(Rotate.Y_AXIS);
             flip1.setFromAngle(0);
@@ -322,32 +216,12 @@ public class ShuffleController {
             flip2.setToAngle(180);
             flip2.setOnFinished(e -> CardFactory.showBack(card));
 
-            TranslateTransition move = new TranslateTransition(Duration.millis(350), card);
-            move.setToX(0);
-            move.setToY(0);
-            move.setInterpolator(Interpolator.EASE_BOTH);
-            // we want move to start after flip2
-            SequentialTransition seq = new SequentialTransition(new ParallelTransition(flip1, new PauseTransition(Duration.millis(0))), flip2, move);
-            seq.setDelay(Duration.millis(cards.indexOf(card) * 60)); // slight stagger
-            animations.add(seq);
+            new SequentialTransition(flip1, flip2).play();
         }
 
-        // 7) play all animations (they are independent). Using a ParallelTransition groups them.
-        ParallelTransition all = new ParallelTransition();
-        all.getChildren().addAll(animations);
-        all.setOnFinished(e -> {
-            // ensure final transforms reset
-            for (StackPane c : cards) {
-                c.setTranslateX(0);
-                c.setTranslateY(0);
-                c.setRotate(0);
-            }
-            // final layout to be safe
-            layoutCards();
-        });
-        all.play();
-    }*/
-
+        grid.applyCss();
+        grid.layout();
+    }
     /**
      * Handle card click: reveal card (back -> front). Up to two reveals allowed.
      * Prevent selecting the same card twice.
